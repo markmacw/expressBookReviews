@@ -66,34 +66,56 @@ public_users.get("/isbn/:isbn", async (req, res) => {
   }
 });
 
-// Get book details based on author
-public_users.get("/author/:author", async (req, res) => {
-  const author = req.params.author;
-  for (const bookId of Object.keys(books)) {
-    const book = await fetchBookById(bookId);
-    if (book.author === author) {
-      return res.status(200).json(book);
-    }
-  }
-  res.status(404).send("No book found by the given author.");
-});
-
-// Assuming an async function to fetch book by ID (simulated for demonstration)
-async function fetchBookById(bookId) {
-  // Simulate fetching book data asynchronously, e.g., from a database
-  await new Promise((resolve) => setTimeout(resolve, 100)); // Simulated delay
-  return books[bookId]; // Assuming 'books' is accessible in this scope
+// Simulated asynchronous function to fetch book by author
+async function fetchBookByAuthor(author) {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      const book = Object.values(books).find((book) => book.author === author);
+      resolve(book);
+    }, 100); // Simulated delay
+  });
 }
 
+// Refactored route handler to use the asynchronous function
+public_users.get("/author/:author", async (req, res) => {
+  const author = req.params.author;
+  try {
+    const book = await fetchBookByAuthor(author);
+    if (book) {
+      return res.status(200).json(book); // Use .json() for automatic JSON.stringify and correct Content-Type
+    } else {
+      return res.status(404).send("No book found by the given author.");
+    }
+  } catch (error) {
+    console.error("Error fetching book:", error);
+    return res.status(500).send("Internal Server Error");
+  }
+});
+
+// Simulated asynchronous function to fetch book by title
+async function fetchBookByTitle(title) {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      const book = Object.values(books).find((book) => book.title === title);
+      resolve(book);
+    }, 100); // Simulated delay
+  });
+}
+
+// Refactored route handler to use the asynchronous function
 public_users.get("/title/:title", async (req, res) => {
   const title = req.params.title;
-  for (const bookId of Object.keys(books)) {
-    const book = await fetchBookById(bookId); // Fetch book data asynchronously
-    if (book.title === title) {
-      return res.status(200).json(book); // Directly send JSON without manual stringification
+  try {
+    const book = await fetchBookByTitle(title);
+    if (book) {
+      return res.status(200).json(book); // Use .json() for automatic JSON.stringify and correct Content-Type
+    } else {
+      return res.status(404).send("No book found with the given title.");
     }
+  } catch (error) {
+    console.error("Error fetching book:", error);
+    return res.status(500).send("Internal Server Error");
   }
-  res.status(404).send("No book found with the given title."); // Send 404 if no book matches
 });
 
 //  Get book review
